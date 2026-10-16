@@ -1,24 +1,71 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import { 
   Dumbbell, 
-  Users, 
-  Trophy, 
   ArrowRight, 
   ShieldCheck, 
   Zap, 
   CheckCircle2, 
-  Clock, 
-  MapPin, 
   Sparkles,
   Award,
   Flame
 } from 'lucide-react';
 
 export default function Home() {
+  const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Check login status on load
+  useEffect(() => {
+    const userLoggedIn = localStorage.getItem('isUserLoggedIn') === 'true';
+    const adminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
+    if (userLoggedIn || adminLoggedIn) {
+      setIsLoggedIn(true);
+    } else {
+      setIsLoggedIn(false);
+    }
+  }, []);
+
   const whatsappUrl = `https://wa.me/916263442343?text=${encodeURIComponent(
     "Hello Iron Studio Gym, I am interested in joining Bhopal's premier fitness center."
   )}`;
+
+  // Protected Action with English Alert
+  const handleProtectedAction = (destination) => {
+    const userLoggedIn = localStorage.getItem('isUserLoggedIn') === 'true';
+    const adminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
+
+    if (!userLoggedIn && !adminLoggedIn) {
+      // 🚨 English Alert Popup
+      Swal.fire({
+        title: 'Login Required!',
+        text: 'Please log in first to continue and access this section.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#06b6d4', // Cyan color
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Log In Now',
+        cancelButtonText: 'Cancel',
+        background: '#0f172a',
+        color: '#ffffff',
+        customClass: {
+          popup: 'border border-cyan-500/30 rounded-2xl shadow-2xl'
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate('/login');
+        }
+      });
+    } else {
+      // Execute action for logged-in user
+      if (destination.startsWith('http')) {
+        window.open(destination, '_blank');
+      } else {
+        navigate(destination);
+      }
+    }
+  };
 
   const facilities = [
     {
@@ -89,21 +136,21 @@ export default function Home() {
 
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4">
-              <Link 
-                to="planspage" 
-                className="w-full sm:w-auto bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-8 py-4 rounded-xl font-bold uppercase text-xs tracking-wider shadow-xl shadow-cyan-500/25 transition-all text-center flex items-center justify-center gap-2 active:scale-95"
+              <button 
+                onClick={() => handleProtectedAction('/planspage')}
+                className="w-full sm:w-auto bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-8 py-4 rounded-xl font-bold uppercase text-xs tracking-wider shadow-xl shadow-cyan-500/25 transition-all text-center flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
               >
                 <span>View Gym Plans</span>
                 <ArrowRight className="w-4 h-4" />
-              </Link>
+              </button>
 
-              <Link 
-                to="/store" 
-                className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 hover:border-cyan-500/40 px-8 py-4 rounded-xl font-bold uppercase text-xs tracking-wider transition-all text-center flex items-center justify-center gap-2 active:scale-95"
+              <button 
+                onClick={() => handleProtectedAction('/store')}
+                className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 hover:border-cyan-500/40 px-8 py-4 rounded-xl font-bold uppercase text-xs tracking-wider transition-all text-center flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
               >
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
                 <span>Supplement Store</span>
-              </Link>
+              </button>
             </div>
 
             {/* Key Live Metrics */}
@@ -160,14 +207,12 @@ export default function Home() {
                     <span className="text-2xl font-black text-white">₹1,299 <span className="text-xs text-slate-400 font-normal">/ mo</span></span>
                   </div>
 
-                  <a 
-                    href={whatsappUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="bg-cyan-500 hover:bg-cyan-600 text-white text-xs font-bold uppercase px-6 py-3.5 rounded-xl transition shadow-lg shadow-cyan-500/20 active:scale-95"
+                  <button 
+                    onClick={() => handleProtectedAction(whatsappUrl)}
+                    className="bg-cyan-500 hover:bg-cyan-600 text-white text-xs font-bold uppercase px-6 py-3.5 rounded-xl transition shadow-lg shadow-cyan-500/20 active:scale-95 cursor-pointer"
                   >
                     Claim VIP Pass
-                  </a>
+                  </button>
                 </div>
               </div>
             </div>
@@ -295,13 +340,13 @@ export default function Home() {
                 <h3 className="text-2xl font-black text-white uppercase mt-1">Standard Strength & Cardio Combo Packages</h3>
                 <p className="text-slate-400 text-xs mt-2">Check out flexible Monthly, Quarterly, and Yearly Passes for Bhopal members.</p>
               </div>
-              <Link 
-                to="/plans" 
-                className="inline-flex items-center gap-2 text-xs font-bold text-cyan-400 hover:text-cyan-300 uppercase tracking-wider"
+              <button 
+                onClick={() => handleProtectedAction('/planspage')}
+                className="inline-flex items-center gap-2 text-xs font-bold text-cyan-400 hover:text-cyan-300 uppercase tracking-wider text-left cursor-pointer"
               >
                 <span>View All Plans</span>
                 <ArrowRight className="w-4 h-4" />
-              </Link>
+              </button>
             </div>
 
             <div className="bg-gradient-to-br from-slate-900 to-[#0c1630] border border-slate-800 p-8 rounded-3xl flex flex-col justify-between space-y-6">
@@ -310,13 +355,13 @@ export default function Home() {
                 <h3 className="text-2xl font-black text-white uppercase mt-1">100% Genuine Fitness Supplements</h3>
                 <p className="text-slate-400 text-xs mt-2">Buy Whey Proteins, Creatine Monohydrate, and Pre-workouts directly in-store or online.</p>
               </div>
-              <Link 
-                to="/store" 
-                className="inline-flex items-center gap-2 text-xs font-bold text-emerald-400 hover:text-emerald-300 uppercase tracking-wider"
+              <button 
+                onClick={() => handleProtectedAction('/store')}
+                className="inline-flex items-center gap-2 text-xs font-bold text-emerald-400 hover:text-emerald-300 uppercase tracking-wider text-left cursor-pointer"
               >
                 <span>Visit Supplement Store</span>
                 <ArrowRight className="w-4 h-4" />
-              </Link>
+              </button>
             </div>
 
           </div>

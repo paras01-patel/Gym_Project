@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import { 
   MapPin, 
   Phone, 
@@ -11,6 +13,9 @@ import {
 } from 'lucide-react';
 
 export default function ContactPage() {
+  const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -20,33 +25,83 @@ export default function ContactPage() {
 
   const [submitted, setSubmitted] = useState(false);
 
+  // Check login status on load
+  useEffect(() => {
+    const userLoggedIn = localStorage.getItem('isUserLoggedIn') === 'true';
+    const adminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
+    if (userLoggedIn || adminLoggedIn) {
+      setIsLoggedIn(true);
+    } else {
+      setIsLoggedIn(false);
+    }
+  }, []);
+
+  // Protected Action Handler with English Alert
+  const handleProtectedAction = (actionCallback) => {
+    const userLoggedIn = localStorage.getItem('isUserLoggedIn') === 'true';
+    const adminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
+
+    if (!userLoggedIn && !adminLoggedIn) {
+      Swal.fire({
+        title: 'Login Required!',
+        text: 'Please log in first to contact us or submit an inquiry.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#06b6d4',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Log In Now',
+        cancelButtonText: 'Cancel',
+        background: '#0f172a',
+        color: '#ffffff',
+        customClass: {
+          popup: 'border border-cyan-500/30 rounded-2xl shadow-2xl'
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate('/login');
+        }
+      });
+    } else {
+      actionCallback();
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.phone) {
-      alert("Kripya apna Naam aur Phone Number zaroor bharein!");
-      return;
-    }
 
-    // Create New Inquiry Object for Admin Panel
-    const newInquiry = {
-      id: Date.now(),
-      name: formData.name,
-      phone: formData.phone,
-      interest: formData.interest,
-      message: formData.message || "I want to visit or join the gym.",
-      date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
+    handleProtectedAction(() => {
+      if (!formData.name || !formData.phone) {
+        alert("Please fill in your Name and Phone Number!");
+        return;
+      }
 
-    // Save strictly to LocalStorage for Admin Dashboard
-    const existingInquiries = JSON.parse(localStorage.getItem('gym_inquiries_list')) || [];
-    const updatedInquiries = [newInquiry, ...existingInquiries];
-    localStorage.setItem('gym_inquiries_list', JSON.stringify(updatedInquiries));
+      // Create New Inquiry Object for Admin Panel
+      const newInquiry = {
+        id: Date.now(),
+        name: formData.name,
+        phone: formData.phone,
+        interest: formData.interest,
+        message: formData.message || "I want to visit or join the gym.",
+        date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
 
-    // Show Success Alert on Screen
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 5000);
-    setFormData({ name: '', phone: '', interest: 'General Inquiry', message: '' });
+      // Save strictly to LocalStorage for Admin Dashboard
+      const existingInquiries = JSON.parse(localStorage.getItem('gym_inquiries_list')) || [];
+      const updatedInquiries = [newInquiry, ...existingInquiries];
+      localStorage.setItem('gym_inquiries_list', JSON.stringify(updatedInquiries));
+
+      // Show Success Alert on Screen
+      setSubmitted(true);
+      setTimeout(() => setSubmitted(false), 5000);
+      setFormData({ name: '', phone: '', interest: 'General Inquiry', message: '' });
+    });
+  };
+
+  const handleWhatsAppClick = () => {
+    handleProtectedAction(() => {
+      window.open("https://wa.me/916263442343?text=Hello%20Iron%20Studio%20Gym,%20I%20want%20to%20inquire%20about%20gym%20membership.", "_blank");
+    });
   };
 
   return (
@@ -111,15 +166,13 @@ export default function ContactPage() {
               </div>
 
               {/* Direct WhatsApp Action Button */}
-              <a 
-                href="https://wa.me/916263442343?text=Hello%20Iron%20Studio%20Gym,%20I%20want%20to%20inquire%20about%20gym%20membership."
-                target="_blank"
-                rel="noopener noreferrer"
+              <button 
+                onClick={handleWhatsAppClick}
                 className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold uppercase text-xs tracking-wider py-3.5 rounded-xl transition shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer"
               >
                 <MessageSquare className="w-4 h-4" />
                 <span>Chat Instantly On WhatsApp</span>
-              </a>
+              </button>
             </div>
 
             {/* Quick Map Simulation Box */}
